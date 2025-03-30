@@ -1,3 +1,5 @@
 .vagrant/
 .env
 cmd.exe.lnk
+hdds/
+commands.txt

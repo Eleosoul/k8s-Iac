@@ -7,7 +7,7 @@ def load_env(file)
   File.readlines(file).each do |line|
     key, value = line.strip.split('=', 2)
     next if key.nil? || value.nil?
-    env[key] = value.gsub(/\"/, '')  # Убираем кавычки
+    env[key] = value.gsub(/"/, '')  # Убираем кавычки
   end
   env
 end
@@ -24,13 +24,33 @@ Vagrant.configure("2") do |config|
     master.vm.provider "virtualbox" do |vb|
       vb.memory = ENV_VARS['MASTER_MEMORY']
       vb.cpus = ENV_VARS['MASTER_CPUS']
+      vb.customize ["createhd", "--filename", "./hdds/master_disk.vdi", "--size", 102400]
+      vb.customize ["storageattach", :id, "--storagectl", "SATA Controller", "--port", 1, "--device", 0, "--type", "hdd", "--medium", "./hdds/master_disk.vdi"]
     end
 
     master.vm.provision "shell", inline: <<-SHELL
       mkdir -p /home/vagrant/.ssh
       echo "#{ENV_VARS['SSH_KEY_MAC']}" >> /root/.ssh/authorized_keys
       echo "#{ENV_VARS['SSH_KEY_HOME']}" >> /root/.ssh/authorized_keys
-    SHELL
+  
+      parted /dev/sdb mklabel gpt
+      parted /dev/sdb mkpart primary ext4 0% 60GB   # /var
+      parted /dev/sdb mkpart primary ext4 60GB 80GB # /opt
+      parted /dev/sdb mkpart primary ext4 80GB 100GB # /tmp
+  
+      mkfs.ext4 /dev/sdb1
+      mkfs.ext4 /dev/sdb2
+      mkfs.ext4 /dev/sdb3
+  
+      mkdir -p /mnt/var /mnt/opt /mnt/tmp
+      mount /dev/sdb1 /mnt/var
+      mount /dev/sdb2 /mnt/opt
+      mount /dev/sdb3 /mnt/tmp
+  
+      echo '/dev/sdb1 /var ext4 defaults 0 2' >> /etc/fstab
+      echo '/dev/sdb2 /opt ext4 defaults 0 2' >> /etc/fstab
+      echo '/dev/sdb3 /tmp ext4 defaults 0 2' >> /etc/fstab
+  SHELL
   end
 
   # Настройки воркер-ноды
@@ -42,19 +62,32 @@ Vagrant.configure("2") do |config|
     worker.vm.provider "virtualbox" do |vb|
       vb.memory = ENV_VARS['WORKER_MEMORY']
       vb.cpus = ENV_VARS['WORKER_CPUS']
+      vb.customize ["createhd", "--filename", "./hdds/worker_disk.vdi", "--size", 102400]
+      vb.customize ["storageattach", :id, "--storagectl", "SATA Controller", "--port", 1, "--device", 0, "--type", "hdd", "--medium", "./hdds/worker_disk.vdi"]
     end
 
     worker.vm.provision "shell", inline: <<-SHELL
       mkdir -p /home/vagrant/.ssh
       echo "#{ENV_VARS['SSH_KEY_MAC']}" >> /root/.ssh/authorized_keys
       echo "#{ENV_VARS['SSH_KEY_HOME']}" >> /root/.ssh/authorized_keys
-    SHELL
+  
+      parted /dev/sdb mklabel gpt
+      parted /dev/sdb mkpart primary ext4 0% 60GB   # /var
+      parted /dev/sdb mkpart primary ext4 60GB 80GB # /opt
+      parted /dev/sdb mkpart primary ext4 80GB 100GB # /tmp
+  
+      mkfs.ext4 /dev/sdb1
+      mkfs.ext4 /dev/sdb2
+      mkfs.ext4 /dev/sdb3
+  
+      mkdir -p /mnt/var /mnt/opt /mnt/tmp
+      mount /dev/sdb1 /mnt/var
+      mount /dev/sdb2 /mnt/opt
+      mount /dev/sdb3 /mnt/tmp
+  
+      echo '/dev/sdb1 /var ext4 defaults 0 2' >> /etc/fstab
+      echo '/dev/sdb2 /opt ext4 defaults 0 2' >> /etc/fstab
+      echo '/dev/sdb3 /tmp ext4 defaults 0 2' >> /etc/fstab
+  SHELL
   end
 end
-
-
-
-
-
-
-
