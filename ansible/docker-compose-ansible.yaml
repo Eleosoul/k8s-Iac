@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  ansible:
+    image: ${IMAGE_A}  # Используем готовый образ с Ansible
+    stdin_open: true
+    tty: true
+    volumes:
+      - ${WORK_ANSIBLE_PATH}:/ansible  # Монтируем локальную папку внутрь контейнера
+      - ${SSH_KEY_PATH}:/root/.ssh
+    working_dir: /ansible  # Делаем папку рабочей директорией
+    command: bash  # Запускаем оболочку
+
+    # Необходимо 
+    # ansible-galaxy collection install ansible.posix
+    # docker compose --env-file .env -f ansible/docker-compose-ansible.yaml up
+    # docker attach ansible-ansible-1
+    # ansible-playbook -i inventory/hosts.yaml cluster.yml --become --become-user=root
+

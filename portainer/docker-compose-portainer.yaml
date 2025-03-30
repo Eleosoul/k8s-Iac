@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    restart: always
+    ports:
+      - "8000:8000"
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"    # Максимум 0.5 CPU
+          memory: "256M" # Максимум 256MB RAM
+        reservations:
+          cpus: "0.25"   # Минимум 0.25 CPU
+          memory: "128M" # Минимум 128MB RAM
+
+volumes:
+  portainer_data:
+
+# docker compose -f portainer/docker-compose-portainer.yaml up

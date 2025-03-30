@@ -1,0 +1,34 @@
+---
+- name: Установка и настройка Nginx
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Установить Nginx
+      yum:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Создать простой index.html
+      copy:
+        content: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Welcome to Nginx!</title>
+          </head>
+          <body>
+              <h1>Успешно! Nginx работает.</h1>
+          </body>
+          </html>
+        dest: /usr/share/nginx/html/index.html
+        owner: nginx
+        group: nginx
+        mode: '0644'
+
+    - name: Запустить и включить Nginx в автозагрузку
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes

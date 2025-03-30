@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  kubespray:
+    image: ${IMAGE_K}
+    stdin_open: true
+    tty: true
+    volumes:
+      - ${INVENTORY_PATH}:/kubespray/inventory
+      - ${SSH_KEY_PATH}:/root/.ssh
+    command: bash
+
+
+# docker compose --env-file .env -f ansible/docker-compose-kubespray.yaml up
+# docker attach kubespray-kubespray-1
